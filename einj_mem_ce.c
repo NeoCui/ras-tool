@@ -64,7 +64,7 @@ static void inject(int nerrors, double interval)
 	memset(buf, '*', bufsz);
 
 	paddr = vtop(buf);
-	printf("vaddr = %p paddr = %llx\n", b, paddr);
+	printf("vaddr = %p paddr = %llx\n", buf, paddr);
 	wfile(EINJ_ADDR, paddr);
 
 	for (i = 0; i < nerrors; i++) {
