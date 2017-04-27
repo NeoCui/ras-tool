@@ -25,6 +25,9 @@
 #define EINJ_DOIT "/sys/kernel/debug/apei/einj/error_inject"
 
 volatile int trigger;
+static char *progname;
+static int nsockets, ncpus, lcpus_persocket;
+static long pagesize;
 
 static void wfile(char *file, unsigned long val)
 {
@@ -76,7 +79,7 @@ static void check_configuration(void)
 		exit(1);
 	}
 	lcpus_persocket = ncpus / nsockets;
-	if (!force_flag && strstr(model, "Gold") == NULL) {
+	if (strstr(model, "Gold") == NULL) {
 		fprintf(stderr, "%s: warning: cpu may not support recovery\n", progname);
 		exit(1);
 	}
