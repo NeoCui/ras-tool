@@ -20,5 +20,5 @@ hornet: hornet.c
 einj_mem_uc: einj_mem_uc.o proc_cpuinfo.o proc_interrupt.o proc_pagemap.o do_memcpy.o
 	cc -o einj_mem_uc einj_mem_uc.o proc_cpuinfo.o proc_interrupt.o proc_pagemap.o do_memcpy.o
 
-einj_mem_ce: einj_mem_ce.o proc_pagemap.o
-	cc -o einj_mem_ce $(CFLAGS) einj_mem_ce.o proc_pagemap.o
+einj_mem_ce: einj_mem_ce.o proc_cpuinfo.o proc_pagemap.o
+	cc -o einj_mem_ce $(CFLAGS) einj_mem_ce.o proc_cpuinfo.o proc_pagemap.o

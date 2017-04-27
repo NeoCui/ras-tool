@@ -86,7 +86,7 @@ static void check_configuration(void)
 		exit(1);
 	}
 	lcpus_persocket = ncpus / nsockets;
-	if (!force_flag && strstr(model, "E7-") == NULL) {
+	if (!force_flag && strstr(model, "Gold") == NULL) {
 		fprintf(stderr, "%s: warning: cpu may not support recovery\n", progname);
 		exit(1);
 	}

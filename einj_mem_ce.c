@@ -47,6 +47,41 @@ tryagain:
 	}
 }
 
+static void check_configuration(void)
+{
+	char	model[512];
+
+	pagesize = getpagesize();
+
+	if (getuid() != 0) {
+		fprintf(stderr, "%s: must be root to run error injection tests\n", progname);
+		exit(1);
+	}
+	if (access("/sys/firmware/acpi/tables/EINJ", R_OK) == -1) {
+		fprintf(stderr, "%s: Error injection not supported, check your BIOS settings\n", progname);
+		exit(1);
+	}
+	if (access(EINJ_NOTRIGGER, R_OK|W_OK) == -1) {
+		fprintf(stderr, "%s: Is the einj.ko module loaded?\n", progname);
+		exit(1);
+	}
+	model[0] = '\0';
+	proc_cpuinfo(&nsockets, &ncpus, model);
+	if (nsockets == 0 || ncpus == 0) {
+		fprintf(stderr, "%s: could not find number of sockets/cpus\n", progname);
+		exit(1);
+	}
+	if (ncpus % nsockets) {
+		fprintf(stderr, "%s: strange topology. Are all cpus online?\n", progname);
+		exit(1);
+	}
+	lcpus_persocket = ncpus / nsockets;
+	if (!force_flag && strstr(model, "Gold") == NULL) {
+		fprintf(stderr, "%s: warning: cpu may not support recovery\n", progname);
+		exit(1);
+	}
+}
+
 static void inject(int nerrors, double interval)
 {
 	char	*buf;
@@ -86,6 +121,7 @@ static void inject(int nerrors, double interval)
 
 int main(int argc, char **argv)
 {
+	check_configuration();
 	int nerrors = (argc > 1) ? atoi(argv[1]) : 20;
 	double interval = (argc > 2) ? atof(argv[2]) : 1.0;
 
