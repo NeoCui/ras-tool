@@ -81,28 +81,28 @@ static void check_configuration(void)
 	lcpus_persocket = ncpus / nsockets;
 	if (strstr(model, "Gold") == NULL) {
 		fprintf(stderr, "%s: warning: cpu may not support recovery\n", progname);
+		exit(1);
 	}
 }
 
-static void inject(int nerrors, double interval, long long paddr)
+static void inject(int nerrors, double interval)
 {
+	char	*buf;
+	long long paddr;
+	extern long long vtop(char *);
 	int	i;
-	if(!paddr){
-		int	bufsz = 4096;
-		char	*buf;
-		extern long long vtop(char *);
-		unsigned long s, e;
+	unsigned long s, e;
+	int	bufsz = 4096;
 
-		buf = malloc(bufsz);
-		if (buf == NULL) {
-			perror("malloc");
-			exit(1);
-		}
-		memset(buf, '*', bufsz);
-
-		paddr = vtop(buf);
-		printf("vaddr = %p paddr = %llx\n", buf, paddr);
+	buf = malloc(bufsz);
+	if (buf == NULL) {
+		perror("malloc");
+		exit(1);
 	}
+	memset(buf, '*', bufsz);
+
+	paddr = vtop(buf);
+	printf("vaddr = %p paddr = %llx\n", buf, paddr);
 	wfile(EINJ_ADDR, paddr);
 
 	for (i = 0; i < nerrors; i++) {
@@ -112,6 +112,12 @@ static void inject(int nerrors, double interval, long long paddr)
 		/* wait a bit to make sure SMI is all done on all cpus */
 		usleep((int)(interval * 1.0e6));
 	}
+
+
+	/* Trigger error by reading from target location */
+	for (i = 0; i < bufsz; i++)
+		trigger += *(buf + i);
+
 	/* wait a bit to allow CMCI handlers to complete */
 	usleep((int)(interval * 1.0e6));
 }
@@ -119,15 +125,14 @@ static void inject(int nerrors, double interval, long long paddr)
 int main(int argc, char **argv)
 {
 	check_configuration();
-	int nerrors = (argc > 1) ? atoi(argv[1]) : 10;
+	int nerrors = (argc > 1) ? atoi(argv[1]) : 20;
 	double interval = (argc > 2) ? atof(argv[2]) : 1.0;
-	long long paddr = (argc > 3) ? atoll(argv[3]) : 0x0;
 
-	wfile(EINJ_ETYPE, 0x10);
+	wfile(EINJ_ETYPE, 0x8);
 	wfile(EINJ_MASK, ~0x0ul);
 	wfile(EINJ_NOTRIGGER, 1);
 
-	inject(nerrors, interval, paddr);
+	inject(nerrors, interval);
 
 	return 0;
 }
